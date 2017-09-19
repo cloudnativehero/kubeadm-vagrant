@@ -1,47 +1,49 @@
-# -*- mode: ruby -*-
-# vi: set ft=ruby :
+BOX_IMAGE = "ubuntu/xenial64"
+NODE_COUNT = 0
+MASTER_IP = "192.168.26.10"
+NODE_IP_NW = "192.168.26."
+POD_NW_CIDR = "10.244.0.0/16"
 
-# Install a kube cluster using kubeadm:
-# http://kubernetes.io/docs/getting-started-guides/kubeadm/
+$kubemasterscript = <<SCRIPT
+
+kubeadm init --apiserver-advertise-address=#{MASTER_IP} --pod-network-cidr=#{POD_NW_CIDR}
+
+mkdir -p $HOME/.kube
+sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
+sudo chown $(id -u):$(id -g) $HOME/.kube/config
+
+kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel-rbac.yml
+
+kubetoken = <<CMD
+kubeadm token list | awk 'NR>1{print $1}'
+CMD
+SCRIPT
 
 Vagrant.configure("2") do |config|
-  config.vm.box = "ubuntu/xenial64"
+  config.vm.box = BOX_IMAGE
   config.vm.box_check_update = false
 
-  config.vm.provision :shell, :path => "install.sh"
+  config.vm.provider "virtualbox" do |l|
+    l.cpus = 1
+    l.memory = "1024"
+  end
+
+  config.vm.provision :shell, :path => "install-centos.sh"
 
   config.hostmanager.enabled = true
   config.hostmanager.manage_guest = true
-
-  # config.vm.network "forwarded_port", guest: 80, host: 8080
-  # config.vm.network "private_network", ip: "192.168.77.10"
-
   # config.vm.network "public_network"
 
-  config.vm.provider "virtualbox" do |vb|
-    vb.cpus = 2
-    vb.memory = "1024"
+  config.vm.define "master" do |subconfig|
+    subconfig.vm.hostname = "master"
+    subconfig.vm.network :private_network, ip: MASTER_IP
+    #subconfig.vm.provision :shell, inline: $kubemasterscript
   end
-
-  config.vm.define "n1" do |c|
-      c.vm.hostname = "n1"
-      c.vm.network "private_network", ip: "192.168.77.10"
-      # Run the following (2/4):
-      # kubeadm init --api-advertise-addresses=192.168.77.10
-      # After nodes are joined (4/4):
-      # kubectl apply -f https://git.io/weave-kube
+  
+  (1..NODE_COUNT).each do |i|
+    config.vm.define "node#{i}" do |subconfig|
+      subconfig.vm.hostname = "node#{i}"
+      subconfig.vm.network :private_network, ip: "NODE_IP_NW#{i + 10}"
+    end
   end
-
-  config.vm.define "n2" do |c|
-      c.vm.hostname = "n2"
-      c.vm.network "private_network", ip: "192.168.77.11"
-      # After master is ready (3/4):
-      # kubeadm join --token <token> <master-ip>
-  end
-
-  config.vm.define "n3" do |c|
-      c.vm.hostname = "n3"
-      c.vm.network "private_network", ip: "192.168.77.12"
-  end
-
 end
