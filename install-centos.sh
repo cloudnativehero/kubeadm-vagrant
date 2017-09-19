@@ -13,3 +13,5 @@ EOF
 setenforce 0
 yum install -y kubelet kubeadm docker
 systemctl enable kubelet && systemctl start kubelet
+systemctl enable docker && systemctl start docker
+echo '1' > /proc/sys/net/bridge/bridge-nf-call-iptables
