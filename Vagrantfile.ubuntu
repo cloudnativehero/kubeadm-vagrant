@@ -1,0 +1,49 @@
+BOX_IMAGE = "ubuntu/xenial64"
+NODE_COUNT = 0
+MASTER_IP = "192.168.26.10"
+NODE_IP_NW = "192.168.26."
+POD_NW_CIDR = "10.244.0.0/16"
+
+$kubemasterscript = <<SCRIPT
+
+kubeadm init --apiserver-advertise-address=#{MASTER_IP} --pod-network-cidr=#{POD_NW_CIDR}
+
+mkdir -p $HOME/.kube
+sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
+sudo chown $(id -u):$(id -g) $HOME/.kube/config
+
+kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel-rbac.yml
+
+kubetoken = <<CMD
+kubeadm token list | awk 'NR>1{print $1}'
+CMD
+SCRIPT
+
+Vagrant.configure("2") do |config|
+  config.vm.box = BOX_IMAGE
+  config.vm.box_check_update = false
+
+  config.vm.provider "virtualbox" do |l|
+    l.cpus = 1
+    l.memory = "1024"
+  end
+
+  config.vm.provision :shell, :path => "install-centos.sh"
+
+  config.hostmanager.enabled = true
+  config.hostmanager.manage_guest = true
+  # config.vm.network "public_network"
+
+  config.vm.define "master" do |subconfig|
+    subconfig.vm.hostname = "master"
+    subconfig.vm.network :private_network, ip: MASTER_IP
+    #subconfig.vm.provision :shell, inline: $kubemasterscript
+  end
+  
+  (1..NODE_COUNT).each do |i|
+    config.vm.define "node#{i}" do |subconfig|
+      subconfig.vm.hostname = "node#{i}"
+      subconfig.vm.network :private_network, ip: "NODE_IP_NW#{i + 10}"
+    end
+  end
+end
