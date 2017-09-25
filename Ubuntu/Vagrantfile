@@ -12,19 +12,21 @@ KUBETOKEN = "b029ee.968a33e8d8e6bb0d"
 
 $kubeminionscript = <<MINIONSCRIPT
 
+kubeadm reset
 kubeadm join --token #{KUBETOKEN} #{MASTER_IP}:6443
 
 MINIONSCRIPT
 
 $kubemasterscript = <<SCRIPT
 
+kubeadm reset
 kubeadm init --apiserver-advertise-address=#{MASTER_IP} --pod-network-cidr=#{POD_NW_CIDR} --token #{KUBETOKEN} --token-ttl 0
 
 mkdir -p $HOME/.kube
-sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
+sudo cp -Rf /etc/kubernetes/admin.conf $HOME/.kube/config
 sudo chown $(id -u):$(id -g) $HOME/.kube/config
 
-kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel-rbac.yml
+kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
 
 SCRIPT
 
