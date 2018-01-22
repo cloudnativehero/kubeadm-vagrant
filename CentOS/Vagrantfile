@@ -12,6 +12,7 @@ KUBETOKEN = "b029ee.968a33e8d8e6bb0d"
 $kubeminionscript = <<MINIONSCRIPT
 
 kubeadm reset
+
 kubeadm join --discovery-token-unsafe-skip-ca-verification --token #{KUBETOKEN} #{MASTER_IP}:6443
 
 MINIONSCRIPT
