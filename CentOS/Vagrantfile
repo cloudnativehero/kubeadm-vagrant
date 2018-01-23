@@ -1,4 +1,4 @@
-BOX_IMAGE = "centos/7"
+BOX_IMAGE = "coolsvap/my-centos"
 SETUP_MASTER = true
 SETUP_NODES = true
 NODE_COUNT = 2
