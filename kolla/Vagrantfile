@@ -1,14 +1,17 @@
 BOX_IMAGE = "coolsvap/my-centos"
->>>>>>> 2cbbb05dfdb4c8f2c02cd09cbf310eac724e84e3
 SETUP_MASTER = true
-SETUP_NODES = true
+SETUP_NODES = false
 NODE_COUNT = 2
 MASTER_IP = "192.168.26.10"
 NODE_IP_NW = "192.168.26."
-POD_NW_CIDR = "10.244.0.0/16"
+#POD_NW_CIDR = "10.244.0.0/16"
+POD_NW_CIDR = "10.1.0.0/16"
+POD_SER_CIDR = "10.3.3.0/24"
 
 #Generate new using steps in README
 KUBETOKEN = "b029ee.968a33e8d8e6bb0d"
+MASTER_RAM = "8192"
+MASTER_CPUS = "4"
 
 $kubeminionscript = <<MINIONSCRIPT
 
@@ -21,19 +24,155 @@ MINIONSCRIPT
 $kubemasterscript = <<SCRIPT
 
 kubeadm reset
-kubeadm init --apiserver-advertise-address=#{MASTER_IP} --pod-network-cidr=#{POD_NW_CIDR} --token #{KUBETOKEN} --token-ttl 0
+
+sed -i 's/10.96.0.10/10.3.3.10/g' /etc/systemd/system/kubelet.service.d/10-kubeadm.conf
+systemctl daemon-reload
+systemctl stop kubelet
+systemctl enable kubelet
+systemctl start kubelet
+cp /etc/sysctl.conf /etc/sysctl.conf.back
+echo "net.bridge.bridge-nf-call-iptables = 1" >> /etc/sysctl.conf
+echo "net.bridge.bridge-nf-call-ip6tables = 1" >> /etc/sysctl.conf
+sysctl -p
+
+kubeadm init --apiserver-advertise-address=#{MASTER_IP} --pod-network-cidr=#{POD_NW_CIDR} --token #{KUBETOKEN} --service-cidr=#{POD_SER_CIDR} --token-ttl 0
 
 mkdir -p $HOME/.kube
 sudo cp -Rf /etc/kubernetes/admin.conf $HOME/.kube/config
 sudo chown $(id -u):$(id -g) $HOME/.kube/config
 
-kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
+#kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
+curl -L https://raw.githubusercontent.com/projectcalico/canal/master/k8s-install/1.7/rbac.yaml -o rbac.yaml
+# kubectl apply -f https://raw.githubusercontent.com/projectcalico/canal/master/k8s-install/1.7/rbac.yaml
+kubectl apply -f rbac.yaml
+
+curl -L https://raw.githubusercontent.com/projectcalico/canal/master/k8s-install/1.7/canal.yaml -o canal.yaml
+sed -i "s@10.244.0.0/16@10.1.0.0/16@" canal.yaml
+kubectl apply -f canal.yaml
+
+kubectl taint nodes --all=true  node-role.kubernetes.io/master:NoSchedule-
+
+export PATH=$PATH:/usr/local/bin
+echo "export PATH=$PATH:/usr/local/bin" >> /etc/profile
+
+
+
+kubectl apply -f <(cat <<EOF1
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRoleBinding
+metadata:
+  name: cluster-admin
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: cluster-admin
+subjects:
+- kind: Group
+  name: system:masters
+- kind: Group
+  name: system:authenticated
+- kind: Group
+  name: system:unauthenticated
+EOF1
+)
+
+curl -L https://raw.githubusercontent.com/kubernetes/helm/master/scripts/get > get_helm.sh
+chmod 700 get_helm.sh
+./get_helm.sh
+helm init
+
+yum install -y git epel-release ansible python-pip python-devel
+
+mkdir kolla-bringup
+cd kolla-bringup
+
+git clone http://github.com/openstack/kolla-ansible
+git clone http://github.com/openstack/kolla-kubernetes
+
+pip install -U kolla-ansible/ kolla-kubernetes/
+
+cp -aR /usr/share/kolla-ansible/etc_examples/kolla /etc
+cp -aR kolla-kubernetes/etc/kolla-kubernetes /etc
+
+kolla-kubernetes-genpwd
+kubectl create namespace kolla
+
+kubectl label node $(hostname) kolla_compute=true
+kubectl label node $(hostname) kolla_controller=true
+
+cat <<EOF2 > add-to-globals.yml
+kolla_install_type: "source"
+tempest_image_alt_id: "{{ tempest_image_id }}"
+tempest_flavor_ref_alt_id: "{{ tempest_flavor_ref_id }}"
+
+neutron_plugin_agent: "openvswitch"
+api_interface_address: 0.0.0.0
+tunnel_interface_address: 0.0.0.0
+orchestration_engine: KUBERNETES
+memcached_servers: "memcached"
+keystone_admin_url: "http://keystone-admin:35357/v3"
+keystone_internal_url: "http://keystone-internal:5000/v3"
+keystone_public_url: "http://keystone-public:5000/v3"
+glance_registry_host: "glance-registry"
+neutron_host: "neutron"
+keystone_database_address: "mariadb"
+glance_database_address: "mariadb"
+nova_database_address: "mariadb"
+nova_api_database_address: "mariadb"
+neutron_database_address: "mariadb"
+cinder_database_address: "mariadb"
+ironic_database_address: "mariadb"
+placement_database_address: "mariadb"
+rabbitmq_servers: "rabbitmq"
+openstack_logging_debug: "True"
+enable_heat: "no"
+enable_cinder: "yes"
+enable_cinder_backend_lvm: "yes"
+enable_cinder_backend_iscsi: "yes"
+enable_cinder_backend_rbd: "no"
+enable_ceph: "no"
+enable_elasticsearch: "no"
+enable_kibana: "no"
+glance_backend_ceph: "no"
+cinder_backend_ceph: "no"
+nova_backend_ceph: "no"
+network_interface: "eth0"
+neutron_external_interface: "eth1"
+EOF2
+cat ./add-to-globals.yml | sudo tee -a /etc/kolla/globals.yml
+
+mkdir /etc/kolla/config
+tee /etc/kolla/config/nova.conf<<EOF3
+[libvirt]
+virt_type=qemu
+cpu_mode=none
+EOF3
+
+kolla-ansible genconfig
+
+kolla-kubernetes/tools/secret-generator.py create
+
+kollakube res create configmap \
+    mariadb keystone horizon rabbitmq memcached nova-api nova-conductor \
+    nova-scheduler glance-api-haproxy glance-registry-haproxy glance-api \
+    glance-registry neutron-server neutron-dhcp-agent neutron-l3-agent \
+    neutron-metadata-agent neutron-openvswitch-agent openvswitch-db-server \
+    openvswitch-vswitchd nova-libvirt nova-compute nova-consoleauth \
+    nova-novncproxy nova-novncproxy-haproxy neutron-server-haproxy \
+    nova-api-haproxy cinder-api cinder-api-haproxy cinder-backup \
+    cinder-scheduler cinder-volume iscsid tgtd keepalived \
+    placement-api placement-api-haproxy
+
+kolla-kubernetes/tools/helm_build_all.sh .
+
+ls | grep ".tgz" | wc -l
 
 SCRIPT
 
 Vagrant.configure("2") do |config|
   config.vm.box = BOX_IMAGE
   config.vm.box_check_update = false
+  config.disksize.size = "40GB"
 
   config.vm.provider "virtualbox" do |l|
     l.cpus = 1
@@ -43,16 +182,17 @@ Vagrant.configure("2") do |config|
   config.vm.provision :shell, :path => "install-centos.sh"
 
   config.hostmanager.enabled = true
-  config.hostmanager.manage_guest = true
   # config.vm.network "public_network"
+  config.vm.hostname = "kolla-kube"
+  config.hostmanager.manage_guest = true
 
   if SETUP_MASTER
     config.vm.define "master" do |subconfig|
       subconfig.vm.hostname = "master"
       subconfig.vm.network :private_network, ip: MASTER_IP
       subconfig.vm.provider :virtualbox do |vb|
-        vb.customize ["modifyvm", :id, "--cpus", "2"]
-        vb.customize ["modifyvm", :id, "--memory", "2048"]
+        vb.customize ["modifyvm", :id, "--cpus", MASTER_CPUS ]
+        vb.customize ["modifyvm", :id, "--memory", MASTER_RAM ]
       end
       subconfig.vm.provision :shell, inline: $kubemasterscript
     end
