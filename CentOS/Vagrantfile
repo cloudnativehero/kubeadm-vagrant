@@ -1,4 +1,4 @@
-BOX_IMAGE = "coolsvap/my-centos"
+BOX_IMAGE = "coolsvap/centos-k8s"
 SETUP_MASTER = true
 SETUP_NODES = true
 NODE_COUNT = 2
@@ -38,8 +38,6 @@ Vagrant.configure("2") do |config|
     l.cpus = 1
     l.memory = "1024"
   end
-
-  config.vm.provision :shell, :path => "install-centos.sh"
 
   config.hostmanager.enabled = true
   config.hostmanager.manage_guest = true
