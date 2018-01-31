@@ -64,6 +64,7 @@ Vagrant.configure("2") do |config|
       subconfig.vm.provision :shell, inline: $kubemasterscript
       if K8S_DASHBOARD
         subconfig.vm.provision :shell, inline: $kubedashscript
+      end
     end
   end
   
