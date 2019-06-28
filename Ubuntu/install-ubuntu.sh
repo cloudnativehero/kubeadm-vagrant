@@ -2,10 +2,9 @@
 
 # Source: http://kubernetes.io/docs/getting-started-guides/kubeadm/
 
-apt-get remove -y docker.io kubelet kubeadm kubectl kubernetes-cni containerd*
+apt-get remove -y docker.io kubelet kubeadm kubectl kubernetes-cni
 apt-get autoremove -y
 systemctl daemon-reload
-
 curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
 cat <<EOF > /etc/apt/sources.list.d/kubernetes.list
 deb http://apt.kubernetes.io/ kubernetes-xenial main
@@ -13,14 +12,17 @@ EOF
 apt-get update
 apt-get install -y docker.io kubelet kubeadm kubectl kubernetes-cni
 systemctl enable kubelet && systemctl start kubelet
-systemctl enable docker && systemctl start docker
 
-CGROUP_DRIVER=$(sudo docker info | grep "Cgroup Driver" | awk '{print $3}')
+cat > /etc/docker/daemon.json <<EOF
+{
+  "exec-opts": ["native.cgroupdriver=systemd"],
+  "log-driver": "json-file",
+  },
+  "storage-driver": "overlay2"
+EOF
 
-sed -i "s|KUBELET_KUBECONFIG_ARGS=|KUBELET_KUBECONFIG_ARGS=--cgroup-driver=$CGROUP_DRIVER |g" /etc/systemd/system/kubelet.service.d/10-kubeadm.conf
+mkdir -p /etc/systemd/system/docker.service.d
 
-sed -i 's/10.96.0.10/10.3.3.10/g' /etc/systemd/system/kubelet.service.d/10-kubeadm.conf
-
+# Restart docker.
 systemctl daemon-reload
-
-systemctl stop kubelet && systemctl start kubelet
+systemctl enable docker && systemctl start docker
