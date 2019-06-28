@@ -26,3 +26,6 @@ mkdir -p /etc/systemd/system/docker.service.d
 # Restart docker.
 systemctl daemon-reload
 systemctl enable docker && systemctl start docker
+
+docker info | grep overlay
+docker info | grep systemd
