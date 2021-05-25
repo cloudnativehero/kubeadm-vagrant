@@ -1,5 +1,3 @@
-NODE_COUNT = 1
-
 Vagrant.configure("2") do |config|
   config.env.enable
   config.vm.box = ENV["BOX_IMAGE"]
@@ -24,12 +22,11 @@ Vagrant.configure("2") do |config|
         vb.customize ["modifyvm", :id, "--cpus", "2"]
         vb.customize ["modifyvm", :id, "--memory", "4096"]
       end
-      subconfig.vm.provision :shell, inline: $kubemasterscript, args: [ENV["KUBE_VERSION"], ENV["POD_NW_CIDR"]]
+      subconfig.vm.provision :shell, inline: $kubemasterscript
     end
   end
-
   if ENV["SETUP_NODES"]
-    (1..NODE_COUNT).each do |i|
+    (1..( ENV["NODE_COUNT"] ).to_i(10)).each do |i|
       config.vm.define "node#{i}" do |subconfig|
         subconfig.vm.hostname = "node#{i}"
         subconfig.vm.network :private_network, ip: ENV["NODE_IP_NW"] + "#{i + 10}"
@@ -55,7 +52,7 @@ kubeadm config images pull
 
 HOST_IP=`/sbin/ifconfig eth1 | egrep -o 'inet [0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}'  | cut -d' ' -f2`
 ### init k8s
-kubeadm init --apiserver-advertise-address=${HOST_IP} --kubernetes-version=$1 --pod-network-cidr=$2 --skip-token-print
+kubeadm init --apiserver-advertise-address=${HOST_IP} --kubernetes-version=#{ENV['KUBERNETES_VERSION']} --pod-network-cidr=#{ENV['POD_NW_CIDR']} --skip-token-print
 
 mkdir -p $HOME/.kube
 sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
