@@ -24,7 +24,7 @@ $kubemasterscript = <<SCRIPT
 kubeadm config images pull
 
 
-HOST_IP=`/sbin/ifconfig enp0s8 | egrep -o 'inet [0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}'  | cut -d' ' -f2`
+HOST_IP=`/sbin/ifconfig eth1 | egrep -o 'inet [0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}'  | cut -d' ' -f2`
 ### init k8s
 kubeadm init --apiserver-advertise-address=#{MASTER_IP} --kubernetes-version=#{KUBE_VERSION} --pod-network-cidr=#{POD_NW_CIDR} --skip-token-print
 ip route add 10.96.0.0/16 dev enp0s8 src #{MASTER_IP}
