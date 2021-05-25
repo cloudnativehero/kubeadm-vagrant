@@ -72,8 +72,8 @@ Vagrant.configure("2") do |config|
       config.vm.define "node#{i}" do |subconfig|
         subconfig.vm.hostname = "node#{i}"
         subconfig.vm.network :private_network, ip: NODE_IP_NW + "#{i + 10}"
+        subconfig.vm.provision :shell, inline: $kubeworkerscript
       end
-      subconfig.vm.provision :shell, inline: $kubeworkerscript
     end
   end
 end  
