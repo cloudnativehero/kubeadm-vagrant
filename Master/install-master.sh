@@ -19,6 +19,10 @@ sed -i '1s/^/force_color_prompt=yes\n/' ~/.bashrc
 #Turn off Swap
 sed -i '/ swap / s/^\(.*\)$/#\1/g' /etc/fstab
 swapoff -a
+
+rm -rf ~/.kube /etc/cni/net.d /etc/kubernetes /var/lib/etcd /var/lib/kubelet /var/run/kubernetes /var/lib/cni /opt/cni
+iptables -F
+
 apt-get update 
 apt-get install wget apt-transport-https gnupg lsb-release -y
 
