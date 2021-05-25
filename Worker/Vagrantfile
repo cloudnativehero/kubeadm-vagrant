@@ -1,6 +1,6 @@
 BOX_IMAGE = "generic/ubuntu1804"
 SETUP_NODES = true
-NODE_COUNT = 2
+NODE_COUNT = 1
 NODE_IP_NW = "192.168.26."
 KUBE_VERSION="1.21.1"
 
