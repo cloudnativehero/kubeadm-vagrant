@@ -2,10 +2,11 @@ BOX_IMAGE = "generic/ubuntu1804"
 SETUP_MASTER = true
 SETUP_NODES = true
 NODE_COUNT = 1
-MASTER_IP = "192.168.26.10"
-POD_NW_CIDR = "10.244.0.0/16"
-NODE_IP_NW = "192.168.26."
+MASTER_IP = "10.100.26.10"
+POD_NW_CIDR = "192.168.0.0/16"
+NODE_IP_NW = "10.100.26."
 KUBE_VERSION="1.21.1"
+NW_PLUGIN="calico"
 
 $kubeworkerscript = <<WSCRIPT
 
@@ -18,12 +19,12 @@ WSCRIPT
 
 $kubemasterscript = <<SCRIPT
 
+#Pull images
+kubeadm config images pull
+
 HOST_IP=`/sbin/ifconfig eth1 | egrep -o 'inet [0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}'  | cut -d' ' -f2`
 ### init k8s
 kubeadm init --apiserver-advertise-address=${HOST_IP} --kubernetes-version=#{KUBE_VERSION} --pod-network-cidr=#{POD_NW_CIDR} --skip-token-print
-
-#Pull images
-kubeadm config images pull
 
 mkdir -p $HOME/.kube
 sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
