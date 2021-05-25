@@ -7,6 +7,14 @@ With reference to steps listed at [Using kubeadm to Create a Cluster](https://ku
 ### Installation
 - Download and install [Vagrant](https://www.vagrantup.com/) specific to your OS 
 
+- Install few Vagrant plugins required for setting it up.
+
+```
+vagrant plugin install vagrant-hostmanager
+vagrant plugin install vagrant-hosts
+vagrant plugin install vagrant-env
+```
+
 - Clone the [kubeadm-vagrant](https://github.com/coolsvap/kubeadm-vagrant) repo
 
 ``` git clone https://github.com/coolsvap/kubeadm-vagrant ```
