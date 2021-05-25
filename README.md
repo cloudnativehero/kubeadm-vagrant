@@ -11,9 +11,7 @@ With reference to steps listed at [Using kubeadm to Create a Cluster](https://ku
 
 ``` git clone https://github.com/coolsvap/kubeadm-vagrant ```
 
-- For setting up Master/Worker nodes move to specific directories.
-
-- Configure the cluster parameters in Vagrantfile. Refer below for details of configuration options.
+- For setting up up the Nodes configure the cluster parameters in Vagrantfile. Refer section below for details of configuration options.
 
 ``` vi Vagrantfile ```
 
