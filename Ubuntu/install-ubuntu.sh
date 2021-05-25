@@ -16,6 +16,9 @@ echo 'alias c=clear' >> ~/.bashrc
 echo 'complete -F __start_kubectl k' >> ~/.bashrc
 sed -i '1s/^/force_color_prompt=yes\n/' ~/.bashrc
 
+#Turn off Swap
+sed -i '/ swap / s/^\(.*\)$/#\1/g' /etc/fstab
+swapoff -a
 apt-get update 
 apt-get install wget apt-transport-https gnupg lsb-release -y
 
