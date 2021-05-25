@@ -36,7 +36,7 @@ Vagrant.configure("2") do |config|
     l.memory = "4096"
   end
 
-  config.vm.provision :shell, :path => "install-ubuntu.sh"
+  config.vm.provision :shell, :path => "install-master.sh"
 
   config.hostmanager.enabled = true
   config.hostmanager.manage_guest = true
@@ -53,3 +53,4 @@ Vagrant.configure("2") do |config|
       subconfig.vm.provision :shell, inline: $kubemasterscript
     end
   end
+end  
