@@ -37,6 +37,8 @@ Vagrant.configure("2") do |config|
 end  
 
 $kubeworkerscript = <<WSCRIPT
+HOST_IP=`/sbin/ifconfig eth1 | egrep -o 'inet [0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}'  | cut -d' ' -f2`
+ip route add 10.96.0.0/16 dev eth1 src ${HOST_IP}
 
 echo
 echo "EXECUTE ON MASTER: kubeadm token create --print-join-command --ttl 0"
@@ -48,6 +50,8 @@ WSCRIPT
 $kubemasterscript = <<SCRIPT
 
 HOST_IP=`/sbin/ifconfig eth1 | egrep -o 'inet [0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}'  | cut -d' ' -f2`
+ip route add 10.96.0.0/16 dev eth1 src ${HOST_IP}
+
 ### init k8s
 kubeadm init --apiserver-advertise-address=${HOST_IP} --kubernetes-version=#{ENV['KUBERNETES_VERSION']} --pod-network-cidr=#{ENV['POD_NW_CIDR']} --skip-token-print
 
@@ -56,8 +60,6 @@ sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
 sudo chown $(id -u):$(id -g) $HOME/.kube/config
 
 kubectl taint nodes --all node-role.kubernetes.io/master-
-
-kubectl create -f https://docs.projectcalico.org/manifests/tigera-operator.yaml
-kubectl create -f https://docs.projectcalico.org/manifests/custom-resources.yaml
+kubectl apply -f https://docs.projectcalico.org/manifests/calico.yaml
 
 SCRIPT
