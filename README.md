@@ -7,13 +7,21 @@ With reference to steps listed at [Using kubeadm to Create a Cluster](https://ku
 ### Installation
 - Download and install [Vagrant](https://www.vagrantup.com/) specific to your OS 
 
+- Install few Vagrant plugins required for setting it up.
+
+```
+vagrant plugin install vagrant-hostmanager
+vagrant plugin install vagrant-hosts
+vagrant plugin install vagrant-env
+```
+
 - Clone the [kubeadm-vagrant](https://github.com/coolsvap/kubeadm-vagrant) repo
 
 ``` git clone https://github.com/coolsvap/kubeadm-vagrant ```
 
-- For setting up up the Nodes configure the cluster parameters in Vagrantfile. Refer section below for details of configuration options.
+- For setting up up the Nodes configure the cluster parameters in ```.env``` file. Refer section below for details of configuration options.
 
-``` vi Vagrantfile ```
+``` vi .env ```
 
 - Spin up the cluster
 
@@ -23,6 +31,7 @@ With reference to steps listed at [Using kubeadm to Create a Cluster](https://ku
 
 ```
 vagrant ssh
+sudo su
 kubectl get pods --all-namespaces
 ```
 Cluster Configuration Options
