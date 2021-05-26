@@ -1,6 +1,7 @@
 Vagrant.configure("2") do |config|
   config.env.enable
   config.vm.box = ENV["BOX_IMAGE"]
+  config.vm.box_version = ENV["KUBERNETES_VERSION"]
   config.vm.box_check_update = false
 
   config.vm.provider ENV["PROVIDER"] do |l|
@@ -8,7 +9,6 @@ Vagrant.configure("2") do |config|
     l.memory = ENV["NODE_MEMORY"]
   end
 
-  config.vm.provision :shell, :path => "install-node.sh"
   config.hostmanager.enabled = true
   config.hostmanager.manage_guest = true
   # config.vm.network "public_network"
@@ -46,9 +46,6 @@ echo
 WSCRIPT
 
 $kubemasterscript = <<SCRIPT
-
-#Pull images
-kubeadm config images pull
 
 HOST_IP=`/sbin/ifconfig eth1 | egrep -o 'inet [0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}'  | cut -d' ' -f2`
 ### init k8s
