@@ -3,6 +3,7 @@ Vagrant.configure("2") do |config|
   config.vm.box = ENV["BOX_IMAGE"]
   config.vm.box_version = ENV["KUBERNETES_VERSION"]
   config.vm.box_check_update = false
+  config.vm.synced_folder ".data/", "/etc/.vagrantdata/"
 
   config.vm.provider ENV["PROVIDER"] do |l|
     l.cpus = ENV["NODE_CPU"]
@@ -40,10 +41,7 @@ $kubeworkerscript = <<WSCRIPT
 HOST_IP=`/sbin/ifconfig eth1 | egrep -o 'inet [0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}'  | cut -d' ' -f2`
 ip route add 10.96.0.0/16 dev eth1 src ${HOST_IP}
 
-echo
-echo "EXECUTE ON MASTER: kubeadm token create --print-join-command --ttl 0"
-echo "THEN RUN THE OUTPUT AS COMMAND HERE TO ADD AS WORKER"
-echo
+$(cat /etc/.vagrantdata/kubeadm-join)
 
 WSCRIPT
 
@@ -59,7 +57,11 @@ mkdir -p $HOME/.kube
 sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
 sudo chown $(id -u):$(id -g) $HOME/.kube/config
 
+cp -R $HOME/.kube /vagrant/
+
 kubectl taint nodes --all node-role.kubernetes.io/master-
 kubectl apply -f https://docs.projectcalico.org/manifests/calico.yaml
+
+kubeadm token create --print-join-command --ttl 0 > /etc/.vagrantdata/kubeadm-join
 
 SCRIPT
