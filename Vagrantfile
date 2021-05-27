@@ -22,7 +22,10 @@ Vagrant.configure("2") do |config|
         vb.customize ["modifyvm", :id, "--cpus", ENV["MASTER_CPU"]]
         vb.customize ["modifyvm", :id, "--memory", ENV["MASTER_MEMORY"]]
       end
-      subconfig.vm.provision :shell, inline: $kubemasterscript
+      subconfig.vm.provision :shell do |s| 
+        s.path = 'master.sh'
+        s.env = { KUBE_VERSION:ENV['KUBE_VERSION'], NW_PLUGIN:ENV['NW_PLUGIN'], POD_NW_CIDR:ENV['POD_NW_CIDR'] }
+      end
     end
   end
   if ENV["SETUP_NODES"]
@@ -31,37 +34,9 @@ Vagrant.configure("2") do |config|
       config.vm.define "#{NODEHOSTNAME}" do |subconfig|
         subconfig.vm.hostname = "#{NODEHOSTNAME}"
         subconfig.vm.network :private_network, ip: ENV["NODE_IP_NW"] + "#{i + 10}"
-        subconfig.vm.provision :shell, inline: $kubeworkerscript
+        subconfig.vm.provision :shell, path: 'worker.sh'
       end
     end
   end
 end  
 
-$kubeworkerscript = <<WSCRIPT
-HOST_IP=`/sbin/ifconfig eth1 | egrep -o 'inet [0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}'  | cut -d' ' -f2`
-ip route add 10.96.0.0/16 dev eth1 src ${HOST_IP}
-
-$(cat /etc/.vagrantdata/kubeadm-join)
-
-WSCRIPT
-
-$kubemasterscript = <<SCRIPT
-
-HOST_IP=`/sbin/ifconfig eth1 | egrep -o 'inet [0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}'  | cut -d' ' -f2`
-ip route add 10.96.0.0/16 dev eth1 src ${HOST_IP}
-
-### init k8s
-kubeadm init --apiserver-advertise-address=${HOST_IP} --kubernetes-version=#{ENV['KUBERNETES_VERSION']} --pod-network-cidr=#{ENV['POD_NW_CIDR']} --skip-token-print
-
-mkdir -p $HOME/.kube
-sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
-sudo chown $(id -u):$(id -g) $HOME/.kube/config
-
-cp -R $HOME/.kube /vagrant/
-
-kubectl taint nodes --all node-role.kubernetes.io/master-
-kubectl apply -f https://docs.projectcalico.org/manifests/calico.yaml
-
-kubeadm token create --print-join-command --ttl 0 > /etc/.vagrantdata/kubeadm-join
-
-SCRIPT
