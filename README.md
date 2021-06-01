@@ -36,10 +36,22 @@ kubectl get pods --all-namespaces
 ```
 Cluster Configuration Options
 
-1. ``` BOX_IMAGE ``` is currently default with &quot;generic/ubuntu1804&quot; box which is custom box created which can be used for setting up the cluster with basic dependencies for kubernetes node.
-2. Set ``` SETUP_MASTER ``` to true if you want to setup the node. This is true by default for spawning a new cluster. You can skip it for adding new minions.
-3. Set ``` SETUP_NODES ``` to true/false depending on whether you are setting up minions in the cluster.
-4. Specify ``` NODE_COUNT ``` as the count of minions in the cluster
-5. Specify  the ``` MASTER_IP ``` as static IP which can be referenced for other cluster configurations
-6. Specify ``` NODE_IP_NW ``` as the network IP which can be used for assigning dynamic IPs for cluster nodes from the same network as Master
-7. Specify custom ``` POD_NW_CIDR ``` of your choice
+1. Generic Properties 
+- ``` BOX_IMAGE ``` is currently default with &quot;generic/ubuntu1804&quot; box which is custom box created which can be used for setting up the cluster with basic dependencies for kubernetes node.
+- ``` PROVIDER ``` is currently default with &quot;virtualbox&quot; It may change in future with more providers.
+- ``` KUBE_VERSION ``` is the version of Kubernetes cluster you want to set up with. The main branch will always have the latest available versions. You can find older versions in the releases.
+- ``` NW_PLUGIN ``` is the network plugin you wish to enable with the Kubernetes cluster. Currently it supports ```calico``` an ```weave```.
+
+2. Master Node Properties 
+- Set ``` SETUP_MASTER ``` to true if you want to setup the node. This is true by default for spawning a new cluster. You can skip it for adding new minions.
+- Set ```MASTER_IP``` to a preferred value from the subnet of your virtualbox host-only network. 
+- Specify custom ``` POD_NW_CIDR ``` of your choice for particular ```NW_PLUGIN```
+- Specify Master node hostname with ```MASTER_HOSTNAME```
+- Provide your recommended values for ```MASTER_CPU``` AND ```MASTER_MEMORY```. The minimum values for both are 2 and 2048 respectively.
+
+3. Worker Noder Properties
+- Set ``` SETUP_NODES ``` to true/false depending on whether you are setting up minions in the cluster.
+- Specify ``` NODE_COUNT ``` as the count of minions in the cluster
+- Specify ``` NODE_IP_NW ``` as the network IP which can be used for assigning dynamic IPs for cluster nodes from the same network as Master
+- Specify Worker node hostname with ```NODE_HOSTNAME```
+- Provide your recommended values for ```NODE_CPU``` AND ```NODE_MEMORY```. The minimum values for both are 1 and 1024 respectively.
