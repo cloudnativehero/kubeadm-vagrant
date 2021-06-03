@@ -1,0 +1,32 @@
+---
+- hosts: all
+  become: true
+  gather_facts: yes
+  tasks:
+  - name: Reset existing cluster components if any
+    command: kubeadm reset -f
+  
+  - name: Recursively remove directory
+    ansible.builtin.file:
+      path: "{{ item }}"
+      state: absent
+    with_items:
+      - /root/.kube
+      - /vagrant/.kube 
+      - /etc/cni/net.d 
+      - /etc/kubernetes 
+      - /var/lib/etcd 
+      - /var/lib/kubelet 
+      - /var/run/kubernetes 
+      - /var/lib/cni 
+      - /opt/cni
+
+  - name: Iptables flush filter
+    ansible.builtin.iptables:
+      flush: yes
+ 
+  - name: Configure default IP route for service network
+    command: "ip route add 10.96.0.0/16 dev eth1 src {{ ansible_eth1.ipv4.address }}"
+
+  - name: Run the join command
+    shell: $(cat /etc/.vagrantdata/kubeadm-join)

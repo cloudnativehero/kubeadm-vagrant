@@ -1,5 +1,6 @@
 Vagrant.configure("2") do |config|
   config.env.enable
+  config.vm.synced_folder ".", "/vagrant"
   config.vm.box = ENV["BOX_IMAGE"]
   config.vm.box_version = ENV["KUBERNETES_VERSION"]
   config.vm.box_check_update = false
@@ -22,9 +23,14 @@ Vagrant.configure("2") do |config|
         vb.customize ["modifyvm", :id, "--cpus", ENV["MASTER_CPU"]]
         vb.customize ["modifyvm", :id, "--memory", ENV["MASTER_MEMORY"]]
       end
-      subconfig.vm.provision :shell do |s| 
-        s.inline = '/bin/sh /etc/k8s-scripts/master.sh'
-        s.env = { KUBE_VERSION:ENV['KUBE_VERSION'], NW_PLUGIN:ENV['NW_PLUGIN'], POD_NW_CIDR:ENV['POD_NW_CIDR'] }
+      subconfig.vm.provision "ansible_local" do |ansible|
+        ansible.playbook = "master.yaml"
+        ansible.verbose = "vvv"
+        ansible.extra_vars = {
+          kube_version: ENV["KUBE_VERSION"],
+          nw_plugin: ENV['NW_PLUGIN'],
+          pod_network_cidr: ENV['POD_NW_CIDR'],
+        }
       end
     end
   end
@@ -34,7 +40,10 @@ Vagrant.configure("2") do |config|
       config.vm.define "#{NODEHOSTNAME}" do |subconfig|
         subconfig.vm.hostname = "#{NODEHOSTNAME}"
         subconfig.vm.network :private_network, ip: ENV["NODE_IP_NW"] + "#{i + 10}"
-        subconfig.vm.provision :shell, inline: '/bin/sh /etc/k8s-scripts/worker.sh'
+        subconfig.vm.provision "ansible_local" do |ansible|
+          ansible.playbook = "worker.yaml"
+          ansible.verbose = "vvv"
+        end
       end
     end
   end

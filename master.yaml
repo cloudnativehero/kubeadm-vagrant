@@ -1,0 +1,86 @@
+---
+- hosts: all
+  become: true
+  gather_facts: yes
+  tasks:
+  - name: Reset existing cluster components if any
+    command: kubeadm reset -f
+  
+  - name: Recursively remove directory
+    ansible.builtin.file:
+      path: "{{ item }}"
+      state: absent
+    with_items:
+      - /root/.kube
+      - /vagrant/.kube 
+      - /etc/cni/net.d 
+      - /etc/kubernetes 
+      - /var/lib/etcd 
+      - /var/lib/kubelet 
+      - /var/run/kubernetes 
+      - /var/lib/cni 
+      - /opt/cni
+
+  - name: Iptables flush filter
+    ansible.builtin.iptables:
+      flush: yes
+ 
+  - name: Configure default IP route for service network
+    command: "ip route add 10.96.0.0/16 dev eth1 src {{ ansible_eth1.ipv4.address }}"
+
+  - name: Initialize the Kubernetes cluster using kubeadm
+    command: kubeadm init --apiserver-advertise-address={{ ansible_eth1.ipv4.address }} --apiserver-cert-extra-sans={{ ansible_eth1.ipv4.address }}  --node-name {{ansible_hostname}} --pod-network-cidr={{ pod_network_cidr }}
+
+  - name: Create new directory for Kubenetes config
+    ansible.builtin.file:
+      path: "{{ item }}"
+      state: directory
+      recurse: yes
+    with_items:
+      - /home/vagrant/.kube
+      - /root/.kube
+
+  - name: Copy file with owner and permissions
+    ansible.builtin.copy:
+      remote_src: yes
+      src: "{{ item.src }}"
+      dest: "{{ item.dest }}"
+      owner: root
+      group: root
+      mode: '0644'
+    with_items:
+      - { src: /etc/kubernetes/admin.conf, dest: /home/vagrant/.kube/config }
+      - { src: /etc/kubernetes/admin.conf, dest: /root/.kube/config }
+    become: true
+      
+  - name: Recursively change ownership of a directory
+    ansible.builtin.file:
+      path: /home/vagrant/.kube/
+      state: directory
+      recurse: yes
+      owner: vagrant
+      group: vagrant
+
+  - name: Untaint the master nodes
+    command: kubectl taint nodes --all node-role.kubernetes.io/master-
+  
+  - name: Install calico pod network
+    become: false
+    command: kubectl apply -f https://docs.projectcalico.org/manifests/calico.yaml
+    when: nw_plugin == 'calico'
+
+  - name: Get the kubectl version
+    shell: kubectl version | base64 | tr -d '\n'
+    register: kubectl_version
+
+  - name: Install weave pod network
+    become: false
+    command: "kubectl apply -f https://cloud.weave.works/k8s/net?k8s-version={{ kubectl_version.stdout_lines[0] }}"
+    when: nw_plugin == 'weave'
+  
+  - name: Generate join command
+    command: kubeadm token create --print-join-command --ttl 0
+    register: join_command
+
+  - name: Copy join command to local file
+    local_action: copy content="{{ join_command.stdout_lines[0] }}" dest="/etc/.vagrantdata/kubeadm-join"
