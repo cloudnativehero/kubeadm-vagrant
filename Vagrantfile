@@ -24,8 +24,8 @@ Vagrant.configure("2") do |config|
         vb.customize ["modifyvm", :id, "--memory", ENV["MASTER_MEMORY"]]
       end
       subconfig.vm.provision "ansible_local" do |ansible|
-        ansible.playbook = "master.yaml"
-        ansible.verbose = "vvv"
+        ansible.playbook = "/etc/k8s-scripts/master.yaml"
+        ansible.verbose = "v"
         ansible.extra_vars = {
           kube_version: ENV["KUBE_VERSION"],
           nw_plugin: ENV['NW_PLUGIN'],
@@ -41,8 +41,8 @@ Vagrant.configure("2") do |config|
         subconfig.vm.hostname = "#{NODEHOSTNAME}"
         subconfig.vm.network :private_network, ip: ENV["NODE_IP_NW"] + "#{i + 10}"
         subconfig.vm.provision "ansible_local" do |ansible|
-          ansible.playbook = "worker.yaml"
-          ansible.verbose = "vvv"
+          ansible.playbook = "/etc/k8s-scripts/worker.yaml"
+          ansible.verbose = "v"
         end
       end
     end
