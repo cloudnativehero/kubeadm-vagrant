@@ -2,7 +2,7 @@ Vagrant.configure("2") do |config|
   config.env.enable
   config.vm.synced_folder ".", "/vagrant"
   config.vm.box = ENV["BOX_IMAGE"]
-  config.vm.box_version = ENV["KUBERNETES_VERSION"]
+  config.vm.box_version = ENV["BOX_VERSION"]
   config.vm.box_check_update = false
   config.vm.synced_folder ".data/", "/etc/.vagrantdata/"
 
