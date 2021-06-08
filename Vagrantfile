@@ -30,6 +30,7 @@ Vagrant.configure("2") do |config|
           kube_version: ENV["KUBE_VERSION"],
           nw_plugin: ENV['NW_PLUGIN'],
           pod_network_cidr: ENV['POD_NW_CIDR'],
+          insecure_dashboard: ENV['INSECURE_DASHBOARD']
         }
       end
     end
