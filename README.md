@@ -2,7 +2,7 @@
 
 ## Introduction
 
-With reference to steps listed at [Using kubeadm to Create a Cluster](https://kubernetes.io/docs/setup/independent/create-cluster-kubeadm/) for setting up the Kubernetes cluster with kubeadm. I have been working on an automation to setup the cluster. The result of it is [kubeadm-vagrant](https://github.com/coolsvap/kubeadm-vagrant), a github project with simple steps to setup your kubernetes cluster with more control on vagrant based virtual machines.
+With reference to steps listed at [Using kubeadm to Create a Cluster](https://kubernetes.io/docs/setup/independent/create-cluster-kubeadm/) for setting up the Kubernetes cluster with kubeadm. I have been working on an automation to setup the cluster. The result of it is [kubeadm-vagrant](https://github.com/cloudnative-tech/kubeadm-vagrant), a github project with simple steps to setup your kubernetes cluster with more control on vagrant based virtual machines.
 
 ### Installation
 - Download and install [Vagrant](https://www.vagrantup.com/) specific to your OS 
@@ -40,7 +40,9 @@ Cluster Configuration Options
 - ``` BOX_IMAGE ``` is currently default with &quot;generic/ubuntu1804&quot; box which is custom box created which can be used for setting up the cluster with basic dependencies for kubernetes node.
 - ``` PROVIDER ``` is currently default with &quot;virtualbox&quot; It may change in future with more providers.
 - ``` KUBE_VERSION ``` is the version of Kubernetes cluster you want to set up with. The main branch will always have the latest available versions. You can find older versions in the releases.
-- ``` NW_PLUGIN ``` is the network plugin you wish to enable with the Kubernetes cluster. Currently it supports ```calico``` an ```weave```.
+- ``` NW_PLUGIN ``` is the network plugin you wish to enable with the Kubernetes cluster. Currently it supports ```calico``` an ```weave```
+- A secure dashboard is enabled by default. To enable ```INSECURE_DASHBOARD``` can be used. Set its value to ```yes```
+  - You can login to dashboard using ```https://<MASTER_IP>:31443``` and the ```.kube/config``` file from your vagrant directory.
 
 2. Master Node Properties 
 - Set ``` SETUP_MASTER ``` to true if you want to setup the node. This is true by default for spawning a new cluster. You can skip it for adding new minions.
