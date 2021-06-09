@@ -5,7 +5,7 @@ Vagrant.configure("2") do |config|
   config.vm.box_version = ENV["BOX_VERSION"]
   config.vm.box_check_update = false
   config.vm.synced_folder ".data/", "/etc/.vagrantdata/"
-
+  config.vm.synced_folder "apps/", "/home/vagrant/apps/"
   config.vm.provider ENV["PROVIDER"] do |l|
     l.cpus = ENV["NODE_CPU"]
     l.memory = ENV["NODE_MEMORY"]
@@ -31,7 +31,6 @@ Vagrant.configure("2") do |config|
           nw_plugin: ENV['NW_PLUGIN'],
           pod_network_cidr: ENV['POD_NW_CIDR'],
           insecure_dashboard: ENV['INSECURE_DASHBOARD'],
-          custom_apps: ENV['CUSTOM_APPS']
         }
       end
     end

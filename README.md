@@ -42,6 +42,7 @@ Cluster Configuration Options
 - ``` KUBE_VERSION ``` is the version of Kubernetes cluster you want to set up with. The main branch will always have the latest available versions. You can find older versions in the releases.
 - ``` NW_PLUGIN ``` is the network plugin you wish to enable with the Kubernetes cluster. Currently it supports ```calico``` an ```weave```
 - A secure dashboard is enabled by default. To enable ```INSECURE_DASHBOARD``` can be used. Set its value to ```yes```
+  - You can login to dashboard using ```https://<MASTER_IP>:31443``` and the ```.kube/config``` file from your vagrant directory.
 
 2. Master Node Properties 
 - Set ``` SETUP_MASTER ``` to true if you want to setup the node. This is true by default for spawning a new cluster. You can skip it for adding new minions.
