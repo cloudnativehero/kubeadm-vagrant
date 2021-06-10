@@ -5,7 +5,6 @@ Vagrant.configure("2") do |config|
   config.vm.box_version = ENV["BOX_VERSION"]
   config.vm.box_check_update = false
   config.vm.synced_folder ".data/", "/etc/.vagrantdata/"
-  config.vm.synced_folder "apps/", "/home/vagrant/apps/"
   config.vm.provider ENV["PROVIDER"] do |l|
     l.cpus = ENV["NODE_CPU"]
     l.memory = ENV["NODE_MEMORY"]
