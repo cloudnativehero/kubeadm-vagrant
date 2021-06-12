@@ -28,12 +28,16 @@ vagrant plugin install vagrant-env
 ``` vagrant up ```
 
 - This will spin up new Kubernetes cluster. You can check the status of cluster with following command,
-
-```
-vagrant ssh
-sudo su
-kubectl get pods --all-namespaces
-```
+  - For Master Node
+    ```
+    vagrant ssh k8s-master
+    sudo su
+    kubectl get pods --all-namespaces
+    ```
+  - For Worker Node
+    ```
+    vagrant ssh k8s-node-<NodeNumber>
+    ```
 Cluster Configuration Options
 
 1. Generic Properties 
