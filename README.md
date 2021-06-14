@@ -47,17 +47,18 @@ Cluster Configuration Options
 - ``` NW_PLUGIN ``` is the network plugin you wish to enable with the Kubernetes cluster. Currently it supports ```calico``` an ```weave```
 - A secure dashboard is enabled by default. To enable ```INSECURE_DASHBOARD``` can be used. Set its value to ```yes```
   - You can login to dashboard using ```https://<MASTER_IP>:31443``` and the ```.kube/config``` file from your vagrant directory.
+- A Load Balancer IP Pool can be provided with ```LB_IPPOOL```. The format is the range of IP addresses in your host-only network.
 
 2. Master Node Properties 
-- Set ``` SETUP_MASTER ``` to true if you want to setup the node. This is true by default for spawning a new cluster. You can skip it for adding new minions.
+- Set ``` SETUP_MASTER ``` to true if you want to setup the node. This is true by default for spawning a new cluster. You can skip it for adding new worker nodes.
 - Set ```MASTER_IP``` to a preferred value from the subnet of your virtualbox host-only network. 
 - Specify custom ``` POD_NW_CIDR ``` of your choice for particular ```NW_PLUGIN```
 - Specify Master node hostname with ```MASTER_HOSTNAME```
 - Provide your recommended values for ```MASTER_CPU``` AND ```MASTER_MEMORY```. The minimum values for both are 2 and 2048 respectively.
 
 3. Worker Noder Properties
-- Set ``` SETUP_NODES ``` to true/false depending on whether you are setting up minions in the cluster.
-- Specify ``` NODE_COUNT ``` as the count of minions in the cluster
+- Set ``` SETUP_NODES ``` to true/false depending on whether you are setting up worker nodes in the cluster.
+- Specify ``` NODE_COUNT ``` as the count of worker nodes in the cluster
 - Specify ``` NODE_IP_NW ``` as the network IP which can be used for assigning dynamic IPs for cluster nodes from the same network as Master
 - Specify Worker node hostname with ```NODE_HOSTNAME```
 - Provide your recommended values for ```NODE_CPU``` AND ```NODE_MEMORY```. The minimum values for both are 1 and 1024 respectively.
