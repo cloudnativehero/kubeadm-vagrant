@@ -22,6 +22,9 @@ vagrant plugin install vagrant-env
 - For setting up up the Nodes configure the cluster parameters in ```.env``` file. Refer section below for details of configuration options.
 
 ``` vi .env ```
+- Create a directory to store artifacts created during cluster creation.
+
+``` mkdir .data```
 
 - Spin up the cluster
 
