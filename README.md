@@ -15,9 +15,9 @@ vagrant plugin install vagrant-hosts
 vagrant plugin install vagrant-env
 ```
 
-- Clone the [kubeadm-vagrant](https://github.com/coolsvap/kubeadm-vagrant) repo
+- Clone the [kubeadm-vagrant](https://github.com/cloudnative-tech/kubeadm-vagrant) repo
 
-``` git clone https://github.com/coolsvap/kubeadm-vagrant ```
+``` git clone https://github.com/cloudnative-tech/kubeadm-vagrant ```
 
 - For setting up up the Nodes configure the cluster parameters in ```.env``` file. Refer section below for details of configuration options.
 
@@ -51,6 +51,8 @@ Cluster Configuration Options
 - A secure dashboard is enabled by default. To enable ```INSECURE_DASHBOARD``` can be used. Set its value to ```yes```
   - You can login to dashboard using ```https://<MASTER_IP>:31443``` and the ```.kube/config``` file from your vagrant directory.
 - A Load Balancer IP Pool can be provided with ```LB_IPPOOL```. The format is the range of IP addresses in your host-only network.
+- The sandbox by default will install HELM v 3.x. To disable it, update ```INSTALL_HELM``` to ```no```
+- The sandbox by default will enable [operator-sdk](https://sdk.operatorframework.io/docs/overview/) and OLM. To disable it, update ```ENABLE_OLM``` to ```no```
 
 2. Master Node Properties 
 - Set ``` SETUP_MASTER ``` to true if you want to setup the node. This is true by default for spawning a new cluster. You can skip it for adding new worker nodes.
