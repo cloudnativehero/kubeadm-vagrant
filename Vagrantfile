@@ -29,6 +29,7 @@ Vagrant.configure("2") do |config|
           insecure_dashboard: ENV['INSECURE_DASHBOARD'],
           lb_ippool: ENV["LB_IPPOOL"],
           install_helm: ENV["INSTALL_HELM"],
+          enable_olm: ENV["ENABLE_OLM"],
         }
       end
     end
