@@ -5,7 +5,7 @@ Vagrant.configure("2") do |config|
   config.vm.box_version = ENV["BOX_VERSION"]
   config.vm.box_check_update = false
   config.vm.synced_folder ".data/", "/etc/.vagrantdata/"
-  
+  config.ssh.forward_agent = true
   config.hostmanager.enabled = true
   config.hostmanager.manage_guest = true
 
@@ -30,6 +30,8 @@ Vagrant.configure("2") do |config|
           lb_ippool: ENV["LB_IPPOOL"],
           install_helm: ENV["INSTALL_HELM"],
           enable_olm: ENV["ENABLE_OLM"],
+          enable_metallb: ENV["ENABLE_METALLB"],
+          enable_ingress: ENV["ENABLE_INGRESS"],
         }
       end
     end
